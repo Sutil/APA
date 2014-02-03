@@ -1,6 +1,7 @@
 package br.com.sutil.apa;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import br.com.sutil.apa.table.FactoryManyToOne;
 import br.com.sutil.apa.table.FactoryOneToMany;
@@ -24,6 +25,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
 		Log.d(TAG, "DatabaseHelper");
 		this.context = context;
 		executaUpdates(getWritableDatabase());
+		scanConverters();
 	}
 
 	private void executaUpdates(SQLiteDatabase db) {
@@ -32,6 +34,12 @@ public class DatabaseHelper extends SQLiteOpenHelper{
 		for(Class<?> clazz : entityClasses){
 			new UpdaterTable(clazz, db).execute();
 		}
+	}
+	
+	private void scanConverters() {
+		Map<Class<?>, Class<?>> converters = new ReaderConverters(context).getConverters();
+		APAApplication app = (APAApplication) context.getApplicationContext();
+		app.setConverters(converters);
 	}
 
 	@Override

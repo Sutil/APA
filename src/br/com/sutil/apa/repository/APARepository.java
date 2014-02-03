@@ -63,6 +63,8 @@ public abstract class APARepository<T> {
 		this.database.close();
 		return id;
 	}
+	
+	
 
 	private List<ColumnValues> getColumnValuesForUpdate(Object instance) {
 		List<ColumnValues> columns = new ArrayList<ColumnValues>();
@@ -129,8 +131,40 @@ public abstract class APARepository<T> {
 			} else if ((value.getClass().equals(String.class)) || (value.getClass().equals(Character.TYPE))) {
 				values.put(columnName, value.toString());
 			}
+			else{
+				try {
+					putCustomValue(values, cv);
+				} catch (IllegalAccessException e) {
+					Log.e(TAG, e.getMessage());
+				} catch (InstantiationException e) {
+					Log.e(TAG, e.getMessage());
+				}
+				
+			}
 		}
 		
+	}
+	
+	private void putCustomValue(ContentValues values, ColumnValues cv) throws IllegalAccessException, InstantiationException{
+		APAApplication app = (APAApplication) context.getApplicationContext();
+		Class<?> converterClass = app.getConverters().get(cv.getType());
+		if(converterClass != null){
+			Object instance = converterClass.newInstance();
+			ConverterType converter = (ConverterType) instance;
+			converter.putValue(cv.getColumnName(), cv.getValue(), values);
+		}
+	}
+	
+	public List<Object> findAll(){
+		open();
+		Finder finder = new Finder(database, new WrapperClass<T>(type), context);
+		return finder.findAll();
+	}
+	
+	public Object findOne(long id){
+		open();
+		Finder finder = new Finder(database, new WrapperClass<T>(type), context);
+		return finder.findOne(id);
 	}
 
 }

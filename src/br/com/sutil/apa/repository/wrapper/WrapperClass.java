@@ -9,6 +9,8 @@ import java.util.List;
 import br.com.sutil.apa.annotation.Column;
 import br.com.sutil.apa.annotation.Entity;
 import br.com.sutil.apa.annotation.Id;
+import br.com.sutil.apa.annotation.ManyToOne;
+import br.com.sutil.apa.annotation.OneToOne;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -24,6 +26,10 @@ public class WrapperClass<T> {
 			throw new IllegalArgumentException("Annotation Entity not found");
 		}
 		this.clazz = clazz;
+	}
+	
+	public Class<T> getClazz() {
+		return clazz;
 	}
 
 	public List<Field> getAllFields() {
@@ -68,6 +74,26 @@ public class WrapperClass<T> {
 	public String getColumnNameId(){
 		return getFieldId().getAnnotation(Id.class).name();
 	}
+	
+	public String getColumnName(Field field){
+		Column column = field.getAnnotation(Column.class);
+		if(column != null){
+			return column.name();
+		}
+		Id id = field.getAnnotation(Id.class);
+		if(id != null){
+			return id.name();
+		}
+		ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
+		if(manyToOne != null){
+			return manyToOne.columnFkName();
+		}
+		OneToOne oneToOne = field.getAnnotation(OneToOne.class);
+		if(oneToOne != null){
+			return oneToOne.columnFkName();
+		}
+		return field.getName();
+	}
 
 	public List<Field> getFieldForAnnotation(final Class<? extends Annotation> annotation) {
 		Collection<Field> filtered = Collections2.filter(getAllFields(), new Predicate<Field>() {
@@ -80,6 +106,10 @@ public class WrapperClass<T> {
 		return Lists.newArrayList(filtered);
 	}
 	
+	public String getTableName(){
+		return clazz.getAnnotation(Entity.class).name();
+	}
+
 	
 	
 

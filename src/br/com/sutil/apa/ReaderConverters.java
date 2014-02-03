@@ -1,36 +1,40 @@
 package br.com.sutil.apa;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.Map;
+
+import br.com.sutil.apa.annotation.APAConverter;
+
+import com.google.common.collect.Maps;
+
+import dalvik.system.DexFile;
 
 import android.content.Context;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.util.Log;
-import br.com.sutil.apa.annotation.Entity;
-import dalvik.system.DexFile;
 
-public class ReaderEntities {
+public class ReaderConverters {
 
-	private static final String TAG = "ReaderEntities";
+	private static final String TAG = ReaderConverters.class.getCanonicalName();
 
 	private Context context;
 	private String packageName;
-	private ArrayList<Class<?>> entityClasses = new ArrayList<Class<?>>();
+	private Map<Class<?>, Class<?>> convertersMap = Maps.newHashMap();
 
-	public ReaderEntities(Context context) {
+	public ReaderConverters(Context context) {
 		this.context = context;
 		this.packageName = context.getPackageName();
 	}
 
-	public ArrayList<Class<?>> getEntityClasses() {
-		Log.d(TAG, "Reader class");
+	public Map<Class<?>, Class<?>> getConverters() {
+		Log.i(TAG, "Reader converter");
 		Enumeration<String> classNames = getClassNames();
 		while (classNames.hasMoreElements()) {
 			String name = (String) classNames.nextElement();
-			discoverClass(name);
+			discoverConverters(name);
 		}
-		return entityClasses;
+		return convertersMap;
 	}
 
 	private Enumeration<String> getClassNames() {
@@ -46,14 +50,14 @@ public class ReaderEntities {
 		return null;
 	}
 
-	private void discoverClass(String name) {
+	private void discoverConverters(String name) {
 		if (name.contains(packageName)) {
 			try {
 				Class<?> discoveredClass = Class.forName(name, true, context.getClass().getClassLoader());
-				Entity entity = discoveredClass.getAnnotation(Entity.class);
-				if (entity != null) {
-					this.entityClasses.add(discoveredClass);
-					Log.i(TAG, "Class found: " + entity.name());
+				APAConverter annotation = discoveredClass.getAnnotation(APAConverter.class);
+				if (annotation != null) {
+					convertersMap.put(annotation.forClass(), discoveredClass);
+					Log.i(TAG, "Converter encontrado: " + discoveredClass.getCanonicalName());
 				}
 			} catch (ClassNotFoundException e) {
 				Log.e(TAG, "Class not found " + name);
