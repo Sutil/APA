@@ -10,6 +10,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 import br.com.sutil.apa.APAApplication;
+import br.com.sutil.apa.annotation.ManyToOne;
+import br.com.sutil.apa.annotation.OneToOne;
 import br.com.sutil.apa.annotation.Type;
 import br.com.sutil.apa.repository.wrapper.WrapperClass;
 
@@ -18,38 +20,38 @@ public class Finder {
 	private static final String TAG = Finder.class.getName();
 
 	private SQLiteDatabase database;
-	private WrapperClass<?> classWrapper;
+	private WrapperClass classWrapper;
 	private Context context;
 
-	public Finder(SQLiteDatabase database, WrapperClass<?> classWrapper, Context context) {
+	public Finder(SQLiteDatabase database, WrapperClass classWrapper, Context context) {
 		this.classWrapper = classWrapper;
 		this.database = database;
 		this.context = context;
-		Log.d(TAG, "finder criado");
 	}
 
 	private Cursor executeQuery(String whereClause, String[] whereArgs) {
 		String table = classWrapper.getTableName();
-		Log.d(TAG, "executando query on table: " + table);
 		return this.database.query(table, null, whereClause, whereArgs, null, null, null);
 	}
 
 	public List<Object> findAll() {
+		return find(null, null);
+	}
+
+	public List<Object> find(String whereClause, String[] whereArgs) {
 		List<Object> entities = new ArrayList<Object>();
-		Cursor c = executeQuery(null, null);
+		Cursor c = executeQuery(whereClause, whereArgs);
 		if (c.moveToFirst()) {
 			do {
 				try {
 					entities.add(processaCursor(c));
 				} catch (IllegalAccessException e) {
-					Log.d(TAG, e.getMessage());
+					Log.e(TAG, e.getMessage());
 				} catch (InstantiationException e) {
-					Log.d(TAG, e.getMessage());
+					Log.e(TAG, e.getMessage());
 				}
 			} while (c.moveToNext());
 		}
-		Log.i(TAG, "query returned " + c.getCount() + " results");
-		Log.i(TAG, entities.size() + " objcts");
 		c.close();
 		return entities;
 	}
@@ -61,17 +63,17 @@ public class Finder {
 			try {
 				obj = processaCursor(c);
 			} catch (IllegalAccessException e) {
-				Log.d(TAG, e.getMessage());
+				Log.e(TAG, e.getMessage());
 			} catch (InstantiationException e) {
-				Log.d(TAG, e.getMessage());
+				Log.e(TAG, e.getMessage());
 			}
 		}
+		c.close();
 		return obj;
 	}
 
 	private Object processaCursor(Cursor c) throws IllegalAccessException, InstantiationException {
 		Object model = classWrapper.getClazz().newInstance();
-		Log.i(TAG, "model created: " + model);
 		for (Field field : classWrapper.getAllMapedFields()) {
 			setValueInField(field, model, c);
 		}
@@ -104,16 +106,20 @@ public class Finder {
 		} else if (fieldType.equals(BigDecimal.class)) {
 			field.set(model, new BigDecimal(c.getDouble(index)));
 		} else {
-			Type type = field.getAnnotation(Type.class);
-			if (type != null) {
+
+			if (field.isAnnotationPresent(Type.class)) {
 				setValueFielCustomType(c, index, field, model);
+			} else if (field.isAnnotationPresent(ManyToOne.class)) {
+				setValueFieldModelType(c, index, field, model, field.getType());
+			} else if (field.isAnnotationPresent(OneToOne.class)) {
+				setValueFieldModelType(c, index, field, model, field.getType());
 			}
+
 		}
 
 	}
 
 	private void setValueFielCustomType(Cursor c, int index, Field field, Object model) throws IllegalAccessException, InstantiationException {
-		Log.i(TAG, "custom value");
 		Class<?> type = field.getType();
 		Class<?> converter = getConverter(type);
 		if (converter != null) {
@@ -122,6 +128,12 @@ public class Finder {
 			conv.getValue(model, field, c, index);
 		}
 
+	}
+
+	private void setValueFieldModelType(Cursor c, int index, Field field, Object model, Class<?> type) throws IllegalAccessException {
+		WrapperClass wrapper = new WrapperClass(type);
+		Object object = new Finder(database, wrapper, context).findOne(c.getLong(index));
+		field.set(model, object);
 	}
 
 	private Class<?> getConverter(Class<?> typeForConverter) {

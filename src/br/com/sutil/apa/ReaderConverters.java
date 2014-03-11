@@ -2,17 +2,14 @@ package br.com.sutil.apa;
 
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
-
-import br.com.sutil.apa.annotation.APAConverter;
-
-import com.google.common.collect.Maps;
-
-import dalvik.system.DexFile;
 
 import android.content.Context;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.util.Log;
+import br.com.sutil.apa.annotation.APAConverter;
+import dalvik.system.DexFile;
 
 public class ReaderConverters {
 
@@ -20,7 +17,7 @@ public class ReaderConverters {
 
 	private Context context;
 	private String packageName;
-	private Map<Class<?>, Class<?>> convertersMap = Maps.newHashMap();
+	private Map<Class<?>, Class<?>> convertersMap = new HashMap<Class<?>, Class<?>>();
 
 	public ReaderConverters(Context context) {
 		this.context = context;

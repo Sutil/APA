@@ -61,7 +61,6 @@ public class FactoryColumn {
 	private Coluna processaField(Field field) {
 		Column annotation = field.getAnnotation(Column.class);
 		if (annotation != null) {
-			Log.d(TAG, "encontramos a coluna: "+annotation.name());
 			return new Coluna(annotation.name(), Type.getType(field), notNull(annotation));
 		}
 		else{

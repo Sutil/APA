@@ -4,6 +4,8 @@ import java.lang.reflect.Field;
 
 import br.com.sutil.apa.annotation.Column;
 import br.com.sutil.apa.annotation.Id;
+import br.com.sutil.apa.annotation.ManyToOne;
+import br.com.sutil.apa.annotation.OneToOne;
 import br.com.sutil.apa.type.Type;
 
 public class ColumnValues {
@@ -34,10 +36,13 @@ public class ColumnValues {
 		} catch (IllegalAccessException e) {
 			return null;
 		}
+		
 	}
+	
 	
 	public static ColumnValues newInstance(Field field, Object instance){
 		ColumnValues cv = new ColumnValues(field, instance);
+		
 		if(cv.columnName != null && cv.columnType != null && cv.field != null ){
 			return cv;
 		}
@@ -51,6 +56,12 @@ public class ColumnValues {
 		}
 		else if (field.getAnnotation(Id.class) != null) {
 			return field.getAnnotation(Id.class).name();
+		}
+		else if(field.getAnnotation(ManyToOne.class) != null){
+			return field.getAnnotation(ManyToOne.class).columnFkName();
+		}
+		else if(field.getAnnotation(OneToOne.class) != null){
+			return field.getAnnotation(OneToOne.class).columnFkName();
 		}
 		return null;
 	}

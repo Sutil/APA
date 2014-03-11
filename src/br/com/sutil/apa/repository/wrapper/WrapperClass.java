@@ -17,18 +17,18 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 
-public class WrapperClass<T> {
+public class WrapperClass {
 
-	private final Class<T> clazz;
+	private final Class<?> clazz;
 
-	public WrapperClass(Class<T> clazz) {
+	public WrapperClass(Class<?> clazz) {
 		if (!clazz.isAnnotationPresent(Entity.class)) {
 			throw new IllegalArgumentException("Annotation Entity not found");
 		}
 		this.clazz = clazz;
 	}
 	
-	public Class<T> getClazz() {
+	public Class<?> getClazz() {
 		return clazz;
 	}
 
@@ -40,6 +40,8 @@ public class WrapperClass<T> {
 		List<Field> fields = Lists.newArrayList();
 		fields.addAll(getFieldForAnnotation(Column.class));
 		fields.addAll(getFieldForAnnotation(Id.class));
+		fields.addAll(getFieldForAnnotation(ManyToOne.class));
+		fields.addAll(getFieldForAnnotation(OneToOne.class));
 		return fields;
 	}
 
@@ -51,7 +53,7 @@ public class WrapperClass<T> {
 		return fields;
 	}
 
-	public Long getId(T instance) {
+	public Long getId(Object instance) {
 		try {
 			Field fieldId = getFieldId();
 			fieldId.setAccessible(true);
@@ -67,8 +69,12 @@ public class WrapperClass<T> {
 		List<Field> fieldForAnnotation = getFieldForAnnotation(Id.class);
 		Preconditions.checkArgument(fieldForAnnotation.size() == 1);
 		Field field = fieldForAnnotation.get(0);
-		Preconditions.checkArgument(Long.class.isAssignableFrom(field.getType()));
+		Preconditions.checkArgument(isLong(field), "Id is not long type");
 		return field;
+	}
+
+	private boolean isLong(Field field) {
+		return long.class.isAssignableFrom(field.getType()) || Long.class.isAssignableFrom(field.getType());
 	}
 	
 	public String getColumnNameId(){

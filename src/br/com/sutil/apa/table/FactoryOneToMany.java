@@ -64,7 +64,6 @@ public class FactoryOneToMany {
 			ParameterizedType type =  (ParameterizedType) field.getGenericType();
 			return (Class<?>) type.getActualTypeArguments()[0];
 		}
-		Log.d(TAG, field.getName()+" nao contem annotatio OneToMay");
 		return null;
 	}
 

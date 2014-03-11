@@ -39,7 +39,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
 	private void scanConverters() {
 		Map<Class<?>, Class<?>> converters = new ReaderConverters(context).getConverters();
 		APAApplication app = (APAApplication) context.getApplicationContext();
-		app.setConverters(converters);
+		app.getConverters().putAll(converters);
 	}
 
 	@Override

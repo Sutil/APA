@@ -9,7 +9,7 @@ import android.util.Log;
 public class APAApplication extends Application {
 	
 	private DatabaseManager databaseManager;
-	private Map<Class<?>, Class<?>> converters = new HashMap<Class<?>, Class<?>>();
+	private final Map<Class<?>, Class<?>> converters = new HashMap<Class<?>, Class<?>>();
 	
 	@Override
 	public void onCreate() {
@@ -32,10 +32,6 @@ public class APAApplication extends Application {
 	
 	public Map<Class<?>, Class<?>> getConverters() {
 		return converters;
-	}
-	
-	public void setConverters(Map<Class<?>, Class<?>> converters) {
-		this.converters = converters;
 	}
 
 }
